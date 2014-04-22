@@ -1,0 +1,8 @@
+#!/bin/bash
+
+MUTATION_REPORT="$1"
+SEATTLESEQ="$2"
+COSMIC="$3"
+OMIM="$4"
+
+python filter.py $MUTATION_REPORT $SEATTLESEQ $COSMIC $OMIM
