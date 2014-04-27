@@ -1,8 +1,5 @@
 #!/bin/bash
 
-MUTATION_REPORT="$1"
-SEATTLESEQ="$2"
-COSMIC="$3"
-OMIM="$4"
-
-python filter.py $MUTATION_REPORT $SEATTLESEQ $COSMIC $OMIM
+python filter_vcf.py 2_Mutation_Report1.txt
+python filter_omim.py omim.txt
+python query_cosmic.py filtered_vcf.txt Cosmic_database.txt
