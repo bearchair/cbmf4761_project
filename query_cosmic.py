@@ -28,27 +28,14 @@ def load_cosmic(cosmic_db):
         l = cosmic_db.readline()
 
 def query_cosmic(vcf_file):
-    find_count = 0
-    null_count = 0
     f = open("cosmic_queries.txt", "w")
-    e = open("gene_pos.txt", "w")
-    l = vcf_file.readline()[0:-1]
-    f.write('%s\tCOSMIC\n' % l)
-    l = vcf_file.readline()[0:-1]
-    f.write('%s\tGENE_NAME\n' % l)
-    l = vcf_file.readline()[0:-1]
+    l = vcf_file.readline()
     while l:
         parts = l.split('\t')
         gene_pos = '%s:%s' % (parts[0], parts[1])
-        e.write('%s\n' % gene_pos)
         if gene_pos in cosmic_dict:
-            f.write('%s\t%s\n' % (l, cosmic_dict[gene_pos]))
-            find_count = find_count + 1
-        else:
-            f.write('%s\tNULL\n' % l)
-            null_count = null_count + 1
-        l = vcf_file.readline()[0:-1]
-    f.write('FOUND: %s\nNULL:%s\n' % (find_count, null_count))
+            f.write('%s' % l)
+        l = vcf_file.readline()
     f.close()
 
 if len(sys.argv)!= 3:
