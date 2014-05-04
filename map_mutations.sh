@@ -16,6 +16,11 @@ python ./python_files/filter_vcf.py ./init_data/tumor_file_names.txt
 python ./python_files/query_dbsnp.py ./passed_vcfs/passed_vcf_names.txt ./dbs/pruned_dbsnp.txt
 python ./python_files/query_cosmic.py ./tocosmic_vcfs/tocosmic_vcf_names.txt ./dbs/Cosmic_database.txt
 python ./python_files/fold_back_checks.py ./cosmic_queries/cosmic_query_names.txt ./nondbsnp_vcfs/nondbsnp_vcf_names.txt
+
+#Use this command to download the humandb files needed for ANNOVAR annotation if you do not already have them.
+#perl ./Downloaded_files/annovar/annotate_variation.pl -buildver hg19 -downdb -webfrom annovar refGene humandb/
+
+
 FILE="./final_vcfs/final_vcf_names.txt"
 GENE_INDEX="./gene_annotated/gene_annotated_names.txt"
 while read line
