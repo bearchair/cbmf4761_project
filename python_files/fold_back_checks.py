@@ -39,19 +39,32 @@ def merge(cosmic_name, nondbsnp_name, name_file):
         else:
             a_parts = a.split('\t')
             b_parts = b.split('\t')
-            if int(a_parts[0][3:]) < int(b_parts[0][3:]):
-                write_file.write(a)
-                a = cosmic_file.readline()
-            elif int(b_parts[0][3:]) < int(a_parts[0][3:]):
-                write_file.write(b)
-                b = nondbsnp_file.readline()
-            else:
+            
+            if a_parts[0] == b_parts[0]:
                 if int(a_parts[1]) < int(b_parts[1]):
                     write_file.write(a)
                     a = cosmic_file.readline()
                 else:
                     write_file.write(b)
                     b = nondbsnp_file.readline()
+            elif a_parts[0][3:] == 'Y':
+                write_file.write(b)
+                b = nondbsnp_file.readline()
+            elif b_parts[0][3:] == 'Y':
+                write_file.write(a)
+                a = cosmic_file.readline()
+            elif a_parts[0][3:] == 'X':
+                write_file.write(b)
+                b = nondbsnp_file.readline()
+            elif b_parts[0][3:] == 'X':
+                write_file.write(a)
+                a = nondbsnp_file.readline()
+            elif int(a_parts[0][3:]) < int(b_parts[0][3:]):
+                write_file.write(a)
+                a = cosmic_file.readline()
+            else:
+                write_file.write(b)
+                b = nondbsnp_file.readline()
     if a:
         print_rest(write_file, cosmic_file)
         nondbsnp_file.close()
@@ -60,6 +73,7 @@ def merge(cosmic_name, nondbsnp_name, name_file):
         print_rest(write_file, nondbsnp_file)
         cosmic_file.close()
     write_file.close()
+    print '%s and %s merged' % (cosmic_name, nondbsnp_name)
 
 def print_rest(f, remainder):
     l = remainder.readline()
@@ -84,6 +98,7 @@ try:
         merge(cosmic_name, nondbsnp_name, name_file)
         cosmic_name = cosmic_files.readline()[:-1]
         nondbsnp_name = nondbsnp_files.readline()[:-1]
+    print 'All files merged.' 
 
 except IOError:
     sys.stderr.write("ERROR: Cannot read inputfile %s.\n" % arg)

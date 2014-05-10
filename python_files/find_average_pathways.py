@@ -5,14 +5,14 @@ import operator
 from collections import defaultdict
 
 pathway_dict = defaultdict(list)
-pathway_counts = defaultdict(int)
+pathway_counts = defaultdict(float)
 
 __author__="John O'Leary <jco2119@columbia.edu>"
-__date__ ="$May 3, 2014"
+__date__ ="$May 10, 2014"
 
 def usage():
     print """
-        python find_pathways.py [c2.all.v4.0.orig.gmt] [file_name.variant_function]
+        python find_average_pathways.py [c2.all.v4.0.orig.gmt] [file_name.variant_function] [total file count]
         """
 
 def load_pathway(pathway_db):
@@ -86,19 +86,28 @@ def print_pathways(name, name_file):
     REACTOME_file.close()
     PID_file.close()
 
-if len(sys.argv)!= 3:
+def average_pathway_count(patient_count):
+    for entry in pathway_counts:
+        pathway_counts[entry] = pathway_counts[entry]/patient_count
+
+
+if len(sys.argv)!= 4:
     usage()
     sys.exit(2)
 
 try:
     pathway_db = file(sys.argv[1],"r")
     file_names = file(sys.argv[2],"r")
+    patient_count = float(sys.argv[3])
     name_file = open("./pathways/pathway_names.txt", "w")
     load_pathway(pathway_db)
     for name in file_names:
         #remove newline character at the end of each line
         count_pathways(name[:-1])
-        print_pathways(name[:-1], name_file)
+        print '%s pathway data counted.' % name
+    average_pathway_count(patient_count)
+    print 'Pathway information averaged.'
+    print_pathways(name[:-1], name_file)
     name_file.close()
     print 'All pathway information calculated.'
 

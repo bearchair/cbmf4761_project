@@ -26,6 +26,7 @@ def load_cosmic(cosmic_db):
                     pos_string = '%s' % pos_range[0]
                     cosmic_dict[pos_string] = parts[0]
         l = cosmic_db.readline()
+    print 'COSMIC Database loaded into memory'
 
 def query_cosmic(name, name_file):
     
@@ -55,6 +56,7 @@ def query_cosmic(name, name_file):
                 write_file.write('%s' % l)
         l = vcf_file.readline()
     write_file.close()
+    print '%s checked against COSMIC db' % name
 
 if len(sys.argv)!= 3:
     usage()
@@ -69,6 +71,7 @@ try:
         #remove newline character at the end of each line
         query_cosmic(name[:-1], name_file)
     name_file.close()
+    print 'COSMIC filtration done'
 
 except IOError:
     sys.stderr.write("ERROR: Cannot read inputfile %s.\n" % arg)

@@ -7,11 +7,10 @@ __date__ ="$Apr 26, 2014"
 
 def usage():
     print """
-        python filter_vcf.py [tumor_file_names.txt]
+        python filter_vcf.py [tumor_file_names.txt] [file root]
         """
 
-def filter(name, name_file):
-    root = './init_data/'
+def filter(name, name_file, root):
     path = '%s%s' % (root, name)
     vcf_file = file(path, "r")
     write_file_name = './passed_vcfs/%s_passed.vcf' % (name[:-4])
@@ -31,18 +30,21 @@ def filter(name, name_file):
                 #f.write(l)
         l = vcf_file.readline()
     f.close()
+    print '%s filtered' % name
 
-if len(sys.argv)!= 2:
+if len(sys.argv)!= 3:
     usage()
     sys.exit(2)
 
 try:
     vcf_files = file(sys.argv[1],"r")
     name_file = open("./passed_vcfs/passed_vcf_names.txt", "w")
+    root = sys.argv[2]
     for name in vcf_files:
         #remove newline character at the end of each line
-        filter(name[:-1], name_file)
+        filter(name[:-1], name_file, root)
     name_file.close()
+    print 'Initial VCF filtration complete.'
 
 except IOError:
     sys.stderr.write("ERROR: Cannot read inputfile %s.\n" % arg)

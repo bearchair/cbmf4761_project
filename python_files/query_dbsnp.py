@@ -22,6 +22,7 @@ def load_dbsnp(dbsnp):
         #dbsnp id
         dbsnp_dict[key] = parts[2]
         l = dbsnp.readline()
+    print 'DBSNP loaded into memory'
 
 def query(name, name_file_one, name_file_two):
 
@@ -41,7 +42,6 @@ def query(name, name_file_one, name_file_two):
     #these are the files that will serve as indices for future python calls in map_mutations.sh
     name_file_one.write('%s_nondbsnp.vcf\n' % tumor_name)
     name_file_two.write('%s_tocosmic.vcf\n' % tumor_name)
-
     
     l = vcf_file.readline()
     while l:
@@ -65,6 +65,7 @@ def query(name, name_file_one, name_file_two):
         l = vcf_file.readline()
     nondbsnp_file.close()
     tocosmic_file.close()
+    print '%s checked against DBSNP' % name
 
 if len(sys.argv)!= 3:
     usage()
@@ -81,6 +82,7 @@ try:
         query(name[:-1], name_file_one, name_file_two)
     name_file_one.close()
     name_file_two.close()
+    print 'DBSNP filtration done'
 
 except IOError:
     sys.stderr.write("ERROR: Cannot read inputfile %s.\n" % arg)
