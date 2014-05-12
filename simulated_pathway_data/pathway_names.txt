@@ -1,0 +1,4 @@
+biocarta/BIOCARTA_pathway_data.txt
+kegg/KEGG_pathway_data.txt
+pid/PID_pathway_data.txt
+reactome/REACTOME_pathway_data.txt
