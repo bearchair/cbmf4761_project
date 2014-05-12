@@ -24,7 +24,7 @@ python ./python_files/fold_back_checks.py ./cosmic_queries/cosmic_query_names.tx
 python ./python_files/convert_to_annovar_input.py ./final_vcfs/final_vcf_names.txt ./final_vcfs/
 
 #Use this command to download the humandb files needed for ANNOVAR annotation if you do not already have them.
-#perl ./Downloaded_files/annovar/annotate_variation.pl -buildver hg19 -downdb -webfrom annovar refGene humandb/
+perl ./Downloaded_files/annovar/annotate_variation.pl -buildver hg19 -downdb -webfrom annovar refGene humandb/
 
 FILE="./simulated_final_data/annovar_input.txt"
 VAR_FUNC_INDEX="./simulated_final_data/var_func_names.txt"
