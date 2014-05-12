@@ -43,4 +43,4 @@ do
     echo "$line.variant_function">>$VAR_FUNC_INDEX
     perl ./Downloaded_files/annovar/annotate_variation.pl -geneanno $OLD_FILE -buildver hg19 humandb/
 done < $FILE
-python ./python_files/find_pathways.py ./Downloaded_files/c2.all.v4.0.symbols.gmt ./gene_annotated/var_func_names.txt
+python ./python_files/find_pathways.py ./Downloaded_files/c2.all.v4.0.symbols.gmt ./simulated_pathway_data/pathway_names.txt ./gene_annotated/var_func_names.txt

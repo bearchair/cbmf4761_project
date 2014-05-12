@@ -3,7 +3,11 @@ import sys
 import csv
 from collections import defaultdict
 
-dbsnp_dict = defaultdict()
+# query_dbsnp.py
+#
+# This function reads the dbSNP database into memory and then checks to see if the mutations
+# recorded in VCF reads appear in the database. If so, the the mutations are written into one
+# file. If not, they are written into another.
 
 __author__="John O'Leary <jco2119@columbia.edu>"
 __date__ ="$Apr 29, 2014"
@@ -13,6 +17,9 @@ def usage():
         python query_dbsnp.py [passed_vcf_names.txt] [pruned_dbsnp.txt]
         """
 
+dbsnp_dict = defaultdict()
+
+#this function reads the dbsnp file into memory
 def load_dbsnp(dbsnp):
     l = dbsnp.readline()
     while l:
@@ -24,8 +31,8 @@ def load_dbsnp(dbsnp):
         l = dbsnp.readline()
     print 'DBSNP loaded into memory'
 
+#this function checks each VCF read against the dbsnp
 def query(name, name_file_one, name_file_two):
-
     #this is the file which has data to extract
     root = './passed_vcfs/'
     path = '%s%s' % (root, name)

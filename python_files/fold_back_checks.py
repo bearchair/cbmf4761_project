@@ -1,5 +1,11 @@
 import sys
 
+# fold_back_checks.py
+#
+# This function takes two files, one of the reads in the VCF file that were
+# not found in dbSNP and the other of the reads that were found in both COSMIC
+# and dbSNP and then combines them into a single, ordered file.
+
 __author__="John O'Leary <jco2119@columbia.edu>"
 __date__ ="$Apr 4, 2014"
 
@@ -8,6 +14,7 @@ def usage():
         python fold_back_checks.py [./cosmic_queries/cosmic_query_names.txt] [./nondbsnp_vcfs/nondbsnp_vcf_names.txt]
         """
 
+#this function handles the actual merging of the two data files
 def merge(cosmic_name, nondbsnp_name, name_file):
     
     #these are the files which have data to extract
@@ -40,6 +47,9 @@ def merge(cosmic_name, nondbsnp_name, name_file):
             a_parts = a.split('\t')
             b_parts = b.split('\t')
             
+            #this is basically a switch hierarchy that covers all possible cases, written in reverse order
+            #the last possible reads in either file will fall on the X and Y chromosomes, which cannot easily be compared with numeric values
+            #as such, all possible combinations of X and Y chromosome reads have to be hardcoded in
             if a_parts[0] == b_parts[0]:
                 if int(a_parts[1]) < int(b_parts[1]):
                     write_file.write(a)
@@ -59,12 +69,14 @@ def merge(cosmic_name, nondbsnp_name, name_file):
             elif b_parts[0][3:] == 'X':
                 write_file.write(a)
                 a = nondbsnp_file.readline()
+            #once we've handled all the X and Y combinations, it's simple to compare chromosome value
             elif int(a_parts[0][3:]) < int(b_parts[0][3:]):
                 write_file.write(a)
                 a = cosmic_file.readline()
             else:
                 write_file.write(b)
                 b = nondbsnp_file.readline()
+    #if we have printed all the values in one file before the other, we can skip the switch hierarchy and simply print the rest of the values in the remaining file
     if a:
         print_rest(write_file, cosmic_file)
         nondbsnp_file.close()
@@ -75,6 +87,7 @@ def merge(cosmic_name, nondbsnp_name, name_file):
     write_file.close()
     print '%s and %s merged' % (cosmic_name, nondbsnp_name)
 
+#this is a small function that handles printing all the rest of the values in a leftover file after the other has already been completely processed
 def print_rest(f, remainder):
     l = remainder.readline()
     while l:
@@ -93,7 +106,6 @@ try:
     cosmic_name = cosmic_files.readline()[:-1]
     nondbsnp_name = nondbsnp_files.readline()[:-1]
     name_file = open("./final_vcfs/final_vcf_names.txt", "w")
-    #I assume both lists are same length. I also use a while loop as opposed to a for loop because I'm dealing with two lists.
     while cosmic_name:
         merge(cosmic_name, nondbsnp_name, name_file)
         cosmic_name = cosmic_files.readline()[:-1]

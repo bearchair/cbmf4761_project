@@ -1,20 +1,39 @@
 #! /usr/bin/python
 import sys
 import csv
-import operator
+from operator import itemgetter
+import numpy
 from collections import defaultdict
+import random
 
-pathway_dict = defaultdict(list)
-pathway_counts = defaultdict(float)
+# find_average_pathways.py
+#
+# This function handles the calculation of population statistics from
+# the data simulated by our shell function. It takes in the gene annotated
+# versions of our simulated data, pulls a subset of those files (specified
+# by the user) some number of times (also specified by the user), and
+# calculates population means and standard deviations that can be used in
+# tumor pathway analysis. It is a comparatively large file due to its
+# comparative complexity.
 
 __author__="John O'Leary <jco2119@columbia.edu>"
 __date__ ="$May 10, 2014"
 
+#this dictionary is indexed by gene name and will pull up a list of all associated pathways for the index value
+pathway_dict = defaultdict(list)
+#this dictionary is indexed by pathway name and will store a list of ratios of the average number of times a pathway is activated divided by the total number of pathway activations in a file
+sample_means = defaultdict(list)
+#this list will store the population statistics for each pathway
+distribution_info = []
+#this rare_hits counter will be useful for future versions, when we include a more sophisticated way of handling the possibility of there being pathways activated in the tumor data that do not show up in our pathway database (one possible strategy is to tag all pathways that are activated under a certain threshold as 'RARE' and then generate population statistics for activating a 'RARE' pathway)
+rare_hits = 0
+
 def usage():
     print """
-        python find_average_pathways.py [c2.all.v4.0.orig.gmt] [file_name.variant_function] [total file count]
+        python find_average_pathways.py [c2.all.v4.0.orig.gmt] [file_name.variant_function] [total file count] [sample size]
         """
 
+#this function simply reads our pathway database into memory
 def load_pathway(pathway_db):
     l = pathway_db.readline()
     while l:
@@ -33,83 +52,162 @@ def load_pathway(pathway_db):
         l = pathway_db.readline()
     print 'Pathway data loaded into memory.'
 
-def count_pathways(name):
+#this function counts the average number of pathway activations that occur for each pathway in a given sample
+def count_pathways(samples):
+    global sample_means
+    total_hits = 0
+    pathway_counts = defaultdict()
+    sample_size = float(len(samples))
     
     #this is the file which has data to extract
-    root = './gene_annotated/'
-    path = '%s%s' % (root, name)
-    gene_info = file(path, "r")
-    #count
-    l = gene_info.readline()
-    while l:
-        parts = l.split('\t')
-        gene_name = parts[1]
-        if gene_name in pathway_dict:
-            for entry in pathway_dict[gene_name]:
-                if entry in pathway_counts:
-                    pathway_counts[entry] = pathway_counts[entry] + 1
-                else:
-                    pathway_counts[entry] = 1
+    for sample in samples:
+        root = './simulated_final_data/'
+        path = '%s%s' % (root, sample)
+        gene_info = file(path, "r")
+        #count
         l = gene_info.readline()
-
-def print_pathways(name, name_file):
+        while l:
+            parts = l.split('\t')
+            gene_name = parts[1]
+            if gene_name in pathway_dict:
+                for entry in pathway_dict[gene_name]:
+                    if entry in pathway_counts:
+                        pathway_counts[entry] = pathway_counts[entry] + 1
+                        total_hits = total_hits + 1
+                    else:
+                        pathway_counts[entry] = 1
+                        total_hits = total_hits + 1
+            l = gene_info.readline()
     
-    #write to name_file
-    name_parts = name.split('_')
-    tumor_name = '%s_%s' % (name_parts[0], name_parts[1])
+    #once the initial counts are made, we can then calculate ratios
+    for pathway in pathway_counts:
+        if pathway in sample_means:
+            #this first quotient is the total number of times a pathway is activated across all samples divided by the total number of pathway activations across all files
+            x = pathway_counts[pathway]/total_hits
+            #the second quotient is what the ratio should be in a single file
+            sample_means[pathway].append(x/sample_size)
+        else:
+            temp = []
+            x = pathway_counts[pathway]/total_hits
+            temp.append(x/sample_size)
+            sample_means[pathway] = temp
 
-    KEGG_name = './pathways/kegg/%s_KEGG_pathways.txt' % tumor_name
+#this function writes the relevent population statistics to file
+def print_pathways():
+    
+    global total_hits
+    
+    KEGG_name = './simulated_pathway_data/kegg/KEGG_pathway_data.txt'
     KEGG_file = open(KEGG_name, "w")
-    BIOCARTA_name = './pathways/biocarta/%s_BIOCARTA_pathways.txt' % tumor_name
+    print 'KEGG file opened'
+    BIOCARTA_name = './simulated_pathway_data/biocarta/BIOCARTA_pathway_data.txt'
     BIOCARTA_file = open(BIOCARTA_name, "w")
-    REACTOME_name = './pathways/reactome/%s_REACTOME_pathways.txt' % tumor_name
+    print 'BIOCARTA file opened'
+    REACTOME_name = './simulated_pathway_data/reactome/REACTOME_pathway_data.txt'
     REACTOME_file = open(REACTOME_name, "w")
-    PID_name = './pathways/pid/%s_PID_pathways.txt' % tumor_name
+    print 'REACTOME file opened'
+    PID_name = './simulated_pathway_data/pid/PID_pathway_data.txt'
     PID_file = open(PID_name, "w")
-    name_file.write('%s_BIOCARTA_pathways.txt\n' % tumor_name)
-    name_file.write('%s_KEGG_pathways.txt\n' % tumor_name)
-    name_file.write('%s_PID_pathways.txt\n' % tumor_name)
-    name_file.write('%s_REACTOME_pathways.txt\n' % tumor_name)
+    print 'PID file opened'
 
-    for x in sorted(pathway_counts, key = pathway_counts.get, reverse = True):
-        parts = x.split('_')
+    #sort distribution info descending, starting with largest mean count for pathway
+    for x in sorted(distribution_info, key = itemgetter(1), reverse = True):
+        parts = x[0].split('_')
         if parts[0] == 'KEGG':
-            KEGG_file.write('%s\t%s\n' % (x, pathway_counts[x]))
+            KEGG_file.write('%s\t%s\t%s\n' % (x[0], x[1], x[2]))
         elif parts[0] == 'BIOCARTA':
-            BIOCARTA_file.write('%s\t%s\n' % (x, pathway_counts[x]))
+            BIOCARTA_file.write('%s\t%s\t%s\n' % (x[0], x[1], x[2]))
         elif parts[0] == 'REACTOME':
-            REACTOME_file.write('%s\t%s\n' % (x, pathway_counts[x]))
+            REACTOME_file.write('%s\t%s\t%s\n' % (x[0], x[1], x[2]))
         elif parts[0] == 'PID':
-            PID_file.write('%s\t%s\n' % (x, pathway_counts[x]))
+            PID_file.write('%s\t%s\t%s\n' % (x[0], x[1], x[2]))
     KEGG_file.close()
     BIOCARTA_file.close()
     REACTOME_file.close()
     PID_file.close()
 
-def average_pathway_count(patient_count):
-    for entry in pathway_counts:
-        pathway_counts[entry] = pathway_counts[entry]/patient_count
+#this function writes data to the name file, it was written to remove clutter from the driver commands
+def write_name_file(name_file):
+    name_file.write('biocarta/BIOCARTA_pathway_data.txt\n')
+    name_file.write('kegg/KEGG_pathway_data.txt\n')
+    name_file.write('pid/PID_pathway_data.txt\n')
+    name_file.write('reactome/REACTOME_pathway_data.txt\n')
 
+#this function produces an array of file names picked pseudorandomly from our simulated exome sequences.
+def choose_sample(samples, patient_count, sample_size):
+    i = 0
+    #sample_size is user defined
+    while i < sample_size:
+        #first choose which number files we will sample
+        sample_num = random.randint(1, patient_count)
+        #we need to add a zero to the front of any number less than 10 to satisfy file naming convention
+        if sample_num < 10:
+            sample_num = '0%s' % sample_num
+        else:
+            sample_num = str(sample_num)
+        #be sure not to include duplicate files
+        if sample_num not in samples:
+            samples.append(sample_num)
+            i = i+1
 
-if len(sys.argv)!= 4:
+    #now write out the full file name
+    z = 0
+    while z < sample_size:
+        samples[z] = 'patient_%s_final.human.variant_function' % samples[z]
+        z = z+1
+
+    return samples
+
+#this function calls several other functions in order to carry out the purpose of find_average_pathways.py
+def eval_samples(patient_count, sample_size):
+    i = 0
+    #this is an arbitrary number, a relatively low number was picked for initial testing due to the length of time it takes for this file to run
+    while i < 5:
+        samples = []
+        samples = choose_sample(samples, patient_count, sample_size)
+        count_pathways(samples)
+        print 'Sample batch %s evaluated.' % (i+1)
+        i = i+1
+
+#this function calculates the final population mean and standard deviation for each pathway
+def calc_distribution():
+    global distribution_info
+    #this pulls out an array that is pointed to by a pathway name
+    for pathway in sample_means:
+        #calculate population mean and standard deviation from the sampling distribution
+        pop_mean = numpy.mean(sample_means[pathway])
+        pop_std = numpy.std(sample_means[pathway])
+        
+        #add this information to the distribution_info dictionary
+        temp = (pathway, pop_mean, pop_std)
+        distribution_info.append(temp)
+
+if len(sys.argv)!= 5:
     usage()
     sys.exit(2)
 
 try:
+    #read in arguments
     pathway_db = file(sys.argv[1],"r")
     file_names = file(sys.argv[2],"r")
     patient_count = float(sys.argv[3])
-    name_file = open("./pathways/pathway_names.txt", "w")
+    sample_size = float(sys.argv[4])
+    
+    #write the names of the files that will hold the pathway analyses
+    name_file = open("./simulated_pathway_data/pathway_names.txt", "w")
+    write_name_file(name_file)
+    
+    #load pathway information
     load_pathway(pathway_db)
-    for name in file_names:
-        #remove newline character at the end of each line
-        count_pathways(name[:-1])
-        print '%s pathway data counted.' % name
-    average_pathway_count(patient_count)
-    print 'Pathway information averaged.'
-    print_pathways(name[:-1], name_file)
+    print 'Pathway information loaded. Begin sampling and evaluation.'
+    #evaluate samples of population
+    eval_samples(patient_count, sample_size)
+    print 'Sample evaluation done. Begin calculating the sample distributions.'
+    calc_distribution()
+    print 'Sample distributions calculated.'
+    print_pathways()
     name_file.close()
-    print 'All pathway information calculated.'
+    print 'All pathway tasks finished.'
 
 except IOError:
     sys.stderr.write("ERROR: Cannot read inputfile %s.\n" % arg)

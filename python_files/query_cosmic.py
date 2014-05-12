@@ -3,16 +3,23 @@ import sys
 import csv
 from collections import defaultdict
 
-cosmic_dict = defaultdict(list)
+# query_cosmic.py
+#
+# This function reads the COSMIC database into memory and then checks to see if the mutations
+# recorded in VCF reads appear in the database. If so, the the mutations are flaged as ones to
+# be reintroduced as candidates for pathway analysis.
 
 __author__="John O'Leary <jco2119@columbia.edu>"
 __date__ ="$Apr 25, 2014"
+
+cosmic_dict = defaultdict(list)
 
 def usage():
     print """
         python query_cosmic.py [to_cosmic_vcf_names.txt] [Cosmic_database.txt]
         """
 
+#this function reads the COSMIC db into memory
 def load_cosmic(cosmic_db):
     l = cosmic_db.readline()
     l = cosmic_db.readline()
@@ -28,6 +35,7 @@ def load_cosmic(cosmic_db):
         l = cosmic_db.readline()
     print 'COSMIC Database loaded into memory'
 
+#this function checks the VCF reads against the cosmic database
 def query_cosmic(name, name_file):
     
     #this is the file which has data to extract
